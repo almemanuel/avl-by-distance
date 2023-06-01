@@ -23,6 +23,7 @@ Point* insert(Point* node, int x, int y);
 int generateRandomNumber(int min, int max);
 void generateRandomPoints(int n, int range, Point** root);
 Point* findBestFireStation(Point* root);
+void printAVLInOrder(Point* root);
 
 int main() {
     srand(time(NULL));  // Inicializa a semente do gerador de números aleatórios
@@ -40,6 +41,8 @@ int main() {
     Point* bestPoint = findBestFireStation(root);
 
     printf("O melhor ponto para a instalação do Corpo de Bombeiros é (%d, %d).\n", bestPoint->x, bestPoint->y);
+
+    printAVLInOrder(root);
 
     return 0;
 }
@@ -79,40 +82,41 @@ Point* createNode(int x, int y, double distance) {
     return newNode;
 }
 
-Point* rightRotate(Point* y) {
-    Point* x = y->left;
-    Point* T2 = x->right;
+Point* rightRotate(Point* node) {
+    Point* leftChild = node->left;
+    Point* rightChild = leftChild->right;
 
     // Realiza a rotação
-    x->right = y;
-    y->left = T2;
+    leftChild->right = node;
+    node->left = rightChild;
 
-    // Atualiza as alturas
-    y->height = max(height(y->left), height(y->right)) + 1;
-    x->height = max(height(x->left), height(x->right)) + 1;
+    // Atualiza as alturas dos nós afetados
+    node->height = max(height(node->left), height(node->right)) + 1;
+    leftChild->height = max(height(leftChild->left), height(leftChild->right)) + 1;
 
-    return x;
+    // Retorna a nova raiz
+    return leftChild;
 }
 
-Point* leftRotate(Point* x) {
-    Point* y = x->right;
-    Point* T2 = y->left;
+Point* leftRotate(Point* node) {
+    Point* rightChild = node->right;
+    Point* leftChild = rightChild->left;
 
     // Realiza a rotação
-    y->left = x;
-    x->right = T2;
+    rightChild->left = node;
+    node->right = leftChild;
 
-    // Atualiza as alturas
-    x->height = max(height(x->left), height(x->right)) + 1;
-    y->height = max(height(y->left), height(y->right)) + 1;
+    // Atualiza as alturas dos nós afetados
+    node->height = max(height(node->left), height(node->right)) + 1;
+    rightChild->height = max(height(rightChild->left), height(rightChild->right)) + 1;
 
-    return y;
+    // Retorna a nova raiz
+    return rightChild;
 }
 
 Point* insert(Point* root, int x, int y) {
-    // Etapa de inserção normal
     if (root == NULL) {
-        return createNode(x, y, 0);
+        return createNode(x, y, 0);  // A distância para a raiz é 0 para o nó raiz
     }
 
     if (x < root->x) {
@@ -120,13 +124,11 @@ Point* insert(Point* root, int x, int y) {
     } else if (x > root->x) {
         root->right = insert(root->right, x, y);
     } else {
-        // Se as coordenadas x forem iguais, verifique as coordenadas y
         if (y < root->y) {
             root->left = insert(root->left, x, y);
         } else if (y > root->y) {
             root->right = insert(root->right, x, y);
         } else {
-            // Se as coordenadas x e y forem iguais, o ponto já está na árvore
             return root;
         }
     }
@@ -159,6 +161,9 @@ Point* insert(Point* root, int x, int y) {
         return leftRotate(root);
     }
 
+    // Após inserir o novo nó, recalcule a distância
+    root->distance = calculateDistance(x, y, root->x, root->y);
+
     // Retorna o nó atualizado
     return root;
 }
@@ -185,4 +190,12 @@ void generateRandomPoints(int n, int range, Point** root) {
 // Função para encontrar o melhor ponto de instalação dos bombeiros
 Point* findBestFireStation(Point* root) {
     return root;  // O melhor ponto é a raiz da árvore AVL
+}
+
+void printAVLInOrder(Point* root) {
+    if (root != NULL) {
+        printAVLInOrder(root->left);
+        printf("Ponto: (%d, %d) - Distância para a raiz: %.2f\n", root->x, root->y, root->distance);
+        printAVLInOrder(root->right);
+    }
 }
