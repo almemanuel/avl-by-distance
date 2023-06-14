@@ -1,201 +1,231 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <time.h>
+#include <stdbool.h>
+#include <assert.h>
 
-typedef struct Point {
+typedef struct {
     int x;
     int y;
-    double distance;
-    struct Point* left;
-    struct Point* right;
-    int height;
 } Point;
 
-int max(int a, int b);
-int height(Point* node);
-int getBalance(Point* node);
-double calculateDistance(int x1, int y1, int x2, int y2);
-Point* createNode(int x, int y, double distance);
-Point* rightRotate(Point* y);
-Point* leftRotate(Point* x);
-Point* insert(Point* node, int x, int y);
-int generateRandomNumber(int min, int max);
-void generateRandomPoints(int n, int range, Point** root);
-Point* findBestFireStation(Point* root);
-void printAVLInOrder(Point* root);
+// Calcula a distância ao quadrado entre dois pontos
+double distance_squared(Point p1, Point p2) {
+    // Calcula as diferenças nas coordenadas x e y
+    int dx = p1.x - p2.x;
+    int dy = p1.y - p2.y;
+    // Retorna a soma dos quadrados das diferenças
+    return dx * dx + dy * dy;
+}
+
+// Função auxiliar usada na recursão para encontrar o melhor ponto de instalação
+Point find_best_fire_station_recursive(Point points[], int start, int end, bool sortByX);
+
+// Função principal para encontrar o melhor ponto de instalação
+Point find_best_fire_station(Point points[], int start, int end, bool sortByX) {
+    // Caso base: se o início e o fim são o mesmo, retorna o ponto único
+    if (start == end)
+        return points[start];
+
+    // Calcula o ponto médio do intervalo
+    int mid = start + (end - start) / 2;
+    // Chama recursivamente a função para encontrar o melhor ponto na metade esquerda
+    Point leftBest = find_best_fire_station(points, start, mid, sortByX);
+    // Chama recursivamente a função para encontrar o melhor ponto na metade direita
+    Point rightBest = find_best_fire_station(points, mid + 1, end, sortByX);
+
+    // Calcula as distâncias quadradas dos pontos médios
+    double leftDist = distance_squared(leftBest, points[mid]);
+    double rightDist = distance_squared(rightBest, points[mid]);
+    // Compara as distâncias e seleciona o melhor ponto
+    Point bestPoint = (leftDist < rightDist) ? leftBest : rightBest;
+
+    // Verifica se algum ponto fora da faixa tem uma distância menor
+    for (int i = start; i <= end; i++) {
+        double dist = distance_squared(points[i], points[mid]);
+        // Se encontrarmos um ponto com uma distância menor, atualizamos o melhor ponto
+        if (dist < distance_squared(bestPoint, points[mid]))
+            bestPoint = points[i];
+    }
+
+    // Retorna o melhor ponto encontrado
+    return bestPoint;
+}
+
+// Função auxiliar para chamar a função principal com a configuração inicial correta
+Point find_best_fire_station_recursive(Point points[], int start, int end, bool sortByX) {
+    // Chama a função principal para encontrar o melhor ponto de instalação
+    return find_best_fire_station(points, start, end, sortByX);
+}
 
 int main() {
-    srand(time(NULL));  // Inicializa a semente do gerador de números aleatórios
+    // Cria um array de pontos
+    Point points[] = {
+        {1, 1},
+        {2, 5},
+        {3, 3},
+        {5, 2},
+        {7, 1}
+    };
+    // Calcula o número de pontos no array
+    int numPoints = sizeof(points) / sizeof(points[0]);
 
-    int n = generateRandomNumber(3, 10);  // Gera um valor aleatório entre 3 e 10 para n
-    int range = generateRandomNumber(10, 100);  // Gera um valor aleatório entre 10 e 100 para range
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    Point bestPoint = find_best_fire_station(points, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 3 && bestPoint.y == 3);
 
-    Point* root = NULL;
-    printf("aqui\n");
+    Point points_1[] = {
+        {1, 1},
+        {2, 2},
+        {3, 3},
+        {4, 4}
+    };
+    // Calcula o número de pontos no array
+    numPoints = sizeof(points_1) / sizeof(points_1[0]);
 
-    generateRandomPoints(n, range, &root);
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    bestPoint = find_best_fire_station(points_1, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 2 && bestPoint.y == 2);
 
-    printf("Árvore AVL construída com sucesso.\n");
+    Point points_2[] = {
+        {1, 1},
+        {2, 5},
+        {3, 3},
+        {5, 2},
+        {7, 1}
+    };
+    // Calcula o número de pontos no array
+    numPoints = sizeof(points_2) / sizeof(points_2[0]);
 
-    Point* bestPoint = findBestFireStation(root);
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    bestPoint = find_best_fire_station(points_2, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 3 && bestPoint.y == 3);
 
-    printf("O melhor ponto para a instalação do Corpo de Bombeiros é (%d, %d).\n", bestPoint->x, bestPoint->y);
+    Point points_3[] = {
+        {1, 3},
+        {2, 2},
+        {3, 4},
+        {4, 1},
+        {5, 5}
+    };
+    // Calcula o número de pontos no array
+    numPoints = sizeof(points_3) / sizeof(points_3[0]);
 
-    printAVLInOrder(root);
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    bestPoint = find_best_fire_station(points_3, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 3 && bestPoint.y == 4);
+
+    Point points_4[] = {
+        {1, 2},
+        {3, 4},
+        {5, 6}
+    };
+    // Calcula o número de pontos no array
+    numPoints = sizeof(points_4) / sizeof(points_4[0]);
+
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    bestPoint = find_best_fire_station(points_4, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 3 && bestPoint.y == 4);
+
+    Point points_5[] = {
+        {1, 1},
+        {2, 2},
+        {3, 3},
+        {4, 4},
+        {5, 5},
+        {6, 6}
+    };
+    // Calcula o número de pontos no array
+    numPoints = sizeof(points_5) / sizeof(points_5[0]);
+
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    bestPoint = find_best_fire_station(points_5, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 3 && bestPoint.y == 3);
+
+    Point points_6[] = {
+        {2, 5},
+        {4, 3},
+        {6, 1},
+        {8, 4},
+        {10, 2},
+        {12, 6},
+        {14, 3}
+    };
+    // Calcula o número de pontos no array
+    numPoints = sizeof(points_6) / sizeof(points_6[0]);
+
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    bestPoint = find_best_fire_station(points_6, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 8 && bestPoint.y == 4);
+
+    Point points_7[] = {
+        {0, 0},
+        {0, 1},
+        {1, 0},
+        {1, 1},
+        {2, 0},
+        {2, 1}
+    };
+    // Calcula o número de pontos no array
+    numPoints = sizeof(points_7) / sizeof(points_7[0]);
+
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    bestPoint = find_best_fire_station(points_7, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 1 && bestPoint.y == 0);
+
+    Point points_8[] = {
+        {1, 1},
+        {1, 2},
+        {1, 3},
+        {1, 4},
+        {1, 5}
+    };
+    // Calcula o número de pontos no array
+    numPoints = sizeof(points_8) / sizeof(points_8[0]);
+
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    bestPoint = find_best_fire_station(points_8, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 1 && bestPoint.y == 3);
+
+    Point points_9[] = {
+        {1, 2},
+        {2, 2},
+        {3, 2},
+        {4, 2},
+        {5, 2}
+    };
+    // Calcula o número de pontos no array
+    numPoints = sizeof(points_9) / sizeof(points_9[0]);
+
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    bestPoint = find_best_fire_station(points_9, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 3 && bestPoint.y == 2);
+
+    Point points_10[] = {
+        {2, 3},
+        {4, 1},
+        {5, 4},
+        {7, 2},
+        {8, 5},
+        {9, 3}
+    };
+    // Calcula o número de pontos no array
+    numPoints = sizeof(points_10) / sizeof(points_10[0]);
+
+    // Chama a função para encontrar o melhor ponto de instalação, ordenando por x
+    bestPoint = find_best_fire_station(points_10, 0, numPoints - 1, true);
+    // Imprime o resultado
+    assert(bestPoint.x == 5 && bestPoint.y == 4);
+
+    printf("Sucesso\n");
 
     return 0;
-}
-
-int max(int a, int b) {
-    return (a > b) ? a : b;
-}
-
-int height(Point* node) {
-    if (node == NULL) {
-        return 0;
-    }
-    return node->height;
-}
-
-int getBalance(Point* node) {
-    if (node == NULL) {
-        return 0;
-    }
-    return height(node->left) - height(node->right);
-}
-
-double calculateDistance(int x1, int y1, int x2, int y2) {
-    int dx = x2 - x1;
-    int dy = y2 - y1;
-    return sqrt(dx*dx + dy*dy);
-}
-
-Point* createNode(int x, int y, double distance) {
-    Point* newNode = (Point*)malloc(sizeof(Point));
-    newNode->x = x;
-    newNode->y = y;
-    newNode->distance = distance;
-    newNode->left = NULL;
-    newNode->right = NULL;
-    newNode->height = 1;
-    return newNode;
-}
-
-Point* rightRotate(Point* node) {
-    Point* leftChild = node->left;
-    Point* rightChild = leftChild->right;
-
-    // Realiza a rotação
-    leftChild->right = node;
-    node->left = rightChild;
-
-    // Atualiza as alturas dos nós afetados
-    node->height = max(height(node->left), height(node->right)) + 1;
-    leftChild->height = max(height(leftChild->left), height(leftChild->right)) + 1;
-
-    // Retorna a nova raiz
-    return leftChild;
-}
-
-Point* leftRotate(Point* node) {
-    Point* rightChild = node->right;
-    Point* leftChild = rightChild->left;
-
-    // Realiza a rotação
-    rightChild->left = node;
-    node->right = leftChild;
-
-    // Atualiza as alturas dos nós afetados
-    node->height = max(height(node->left), height(node->right)) + 1;
-    rightChild->height = max(height(rightChild->left), height(rightChild->right)) + 1;
-
-    // Retorna a nova raiz
-    return rightChild;
-}
-
-Point* insert(Point* root, int x, int y) {
-    if (root == NULL) {
-        return createNode(x, y, 0);  // A distância para a raiz é 0 para o nó raiz
-    }
-
-    if (x < root->x) {
-        root->left = insert(root->left, x, y);
-    } else if (x > root->x) {
-        root->right = insert(root->right, x, y);
-    } else {
-        if (y < root->y) {
-            root->left = insert(root->left, x, y);
-        } else if (y > root->y) {
-            root->right = insert(root->right, x, y);
-        } else {
-            return root;
-        }
-    }
-
-    // Atualiza a altura do nó atual
-    root->height = max(height(root->left), height(root->right)) + 1;
-
-    // Realiza o balanceamento da árvore
-    int balance = getBalance(root);
-
-    // Caso de rotação simples à esquerda (left-left)
-    if (balance > 1 && x < root->left->x) {
-        return rightRotate(root);
-    }
-
-    // Caso de rotação simples à direita (right-right)
-    if (balance < -1 && x > root->right->x) {
-        return leftRotate(root);
-    }
-
-    // Caso de rotação dupla à esquerda (left-right)
-    if (balance > 1 && x > root->left->x) {
-        root->left = leftRotate(root->left);
-        return rightRotate(root);
-    }
-
-    // Caso de rotação dupla à direita (right-left)
-    if (balance < -1 && x < root->right->x) {
-        root->right = rightRotate(root->right);
-        return leftRotate(root);
-    }
-
-    // Após inserir o novo nó, recalcule a distância
-    root->distance = calculateDistance(x, y, root->x, root->y);
-
-    // Retorna o nó atualizado
-    return root;
-}
-
-// Definição das estruturas e funções da AVL (incluindo as funções que mencionamos anteriormente)
-
-// Função para gerar um número aleatório entre min e max
-int generateRandomNumber(int min, int max) {
-    return rand() % (max - min + 1) + min;
-}
-
-// Função para gerar pontos aleatórios
-void generateRandomPoints(int n, int range, Point** root) {
-    srand(time(NULL));  // Inicializa a semente do gerador de números aleatórios
-
-    int i;
-    for (i = 0; i < n; i++) {
-        int x = generateRandomNumber(-range, range);
-        int y = generateRandomNumber(-range, range);
-        *root = insert(*root, x, y);
-    }
-}
-
-// Função para encontrar o melhor ponto de instalação dos bombeiros
-Point* findBestFireStation(Point* root) {
-    return root;  // O melhor ponto é a raiz da árvore AVL
-}
-
-void printAVLInOrder(Point* root) {
-    if (root != NULL) {
-        printAVLInOrder(root->left);
-        printf("Ponto: (%d, %d) - Distância para a raiz: %.2f\n", root->x, root->y, root->distance);
-        printAVLInOrder(root->right);
-    }
 }
